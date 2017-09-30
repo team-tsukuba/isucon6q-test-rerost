@@ -7,6 +7,8 @@ require 'mysql2-cs-bind'
 require 'rack/utils'
 require 'sinatra/base'
 
+require 'newrelic_rpm'
+
 module Isutar
   class Web < ::Sinatra::Base
     enable :protection
