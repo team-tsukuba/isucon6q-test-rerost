@@ -10,7 +10,7 @@ require 'rack/utils'
 require 'sinatra/base'
 require 'tilt/erubis'
 
-require 'newrelic_rpm'
+#require 'newrelic_rpm'
 
 module Isuda
   class Web < ::Sinatra::Base
