@@ -8,6 +8,8 @@ require 'rack/utils'
 require 'sinatra/base'
 
 #require 'newrelic_rpm'
+require 'rack-mini-profiler'
+require 'rack-lineprof'
 
 module Isutar
   class Web < ::Sinatra::Base
@@ -24,6 +26,7 @@ module Isutar
       register Sinatra::Reloader
 
       use Rack::MiniProfiler
+      use Rack::Lineprof
     end
 
     helpers do

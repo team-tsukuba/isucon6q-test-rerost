@@ -11,6 +11,8 @@ require 'sinatra/base'
 require 'tilt/erubis'
 
 #require 'newrelic_rpm'
+require 'rack-mini-profiler'
+require 'rack-lineprof'
 
 module Isuda
   class Web < ::Sinatra::Base
@@ -30,6 +32,8 @@ module Isuda
       require 'sinatra/reloader'
 
       register Sinatra::Reloader
+      use Rack::MiniProfiler
+      use Rack::Lineprof
     end
 
     set(:set_name) do |value|
