@@ -22,6 +22,8 @@ module Isutar
       require 'sinatra/reloader'
 
       register Sinatra::Reloader
+
+      use Rack::MiniProfiler
     end
 
     helpers do
