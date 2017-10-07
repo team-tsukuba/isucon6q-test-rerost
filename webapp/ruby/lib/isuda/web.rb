@@ -97,7 +97,7 @@ module Isuda
 
       def htmlify(content)
         keywords = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
-        pattern = keywords.map {|k| keywords[:regrex_escape] ? keywords[:regrex_escape] : Regexp.escape(k[:keyword]) }.join('|')
+        pattern = keywords.map {|k| k[:regrex_escape] ? k[:regrex_escape] : Regexp.escape(k[:keyword]) }.join('|')
         kw2hash = {}
         hashed_content = content.gsub(/(#{pattern})/) {|m|
           matched_keyword = $1
