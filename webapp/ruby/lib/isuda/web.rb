@@ -265,7 +265,6 @@ module Isuda
     post '/stars' do
       keyword = params[:keyword]
 
-      user_name = params[:user]
       db.xquery(%|
         INSERT INTO star (keyword, user_name, created_at)
         VALUES (?, ?, NOW())
