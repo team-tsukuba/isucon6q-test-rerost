@@ -119,7 +119,7 @@ module Isuda
       end
 
       def load_stars(keyword)
-        db.xquery(%| select count(*) as cnt from star where keyword = ? |, keyword).first[:cnt].to_i
+        db.xquery(%| select * as cnt from star where keyword = ? |, keyword).to_a
       end
 
       def redirect_found(path)
