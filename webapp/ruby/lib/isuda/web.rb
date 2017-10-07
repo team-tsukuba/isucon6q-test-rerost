@@ -219,7 +219,7 @@ module Isuda
         INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
         VALUES (?, ?, ?, NOW(), NOW(), character_length(?))
         ON DUPLICATE KEY UPDATE
-        author_id = ?, keyword = ?, description = ?, updated_at = NOW(), character_length(?)
+        author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = character_length(?)
       |, *bound)
 
       redirect_found '/'
