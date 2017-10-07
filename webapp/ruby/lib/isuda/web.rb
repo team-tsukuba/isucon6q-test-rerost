@@ -263,7 +263,7 @@ module Isuda
     post '/stars', set_name: true do
       keyword = params[:keyword]
       user_name = params[:user]
-      if db.xquery(%| select count(*) as cnt from entry where keyword = ? |, keyword).first[:cnt] == 0:
+      if db.xquery(%| select count(*) as cnt from entry where keyword = ? |, keyword).first[:cnt] == 0
         halt(404)
       end
 
