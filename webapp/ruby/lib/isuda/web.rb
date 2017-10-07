@@ -214,7 +214,7 @@ module Isuda
       description = params[:description]
       halt(400) if is_spam_content(description) || is_spam_content(keyword)
 
-      bound = [@user_id, keyword, description, keyword, Regexp.escape(keyword)] * 2
+      bound = [@user_id, keyword, description, keyword] * 2
       db.xquery(%|
         INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
         VALUES (?, ?, ?, NOW(), NOW(), character_length(?), ?)
