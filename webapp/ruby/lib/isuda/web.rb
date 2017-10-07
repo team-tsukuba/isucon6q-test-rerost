@@ -119,7 +119,7 @@ module Isuda
       end
 
       def load_stars(keyword)
-        db.xquery(%| select * from star where keyword = ? |, keyword).to_a
+        db.xquery(%| select * from star where keyword = ? |, keyword)
       end
 
       def redirect_found(path)
@@ -254,7 +254,7 @@ module Isuda
     # migration from isutar
     get '/stars' do
       keyword = params[:keyword] || ''
-      stars = db.xquery(%| select * from star where keyword = ? |, keyword).to_a
+      stars = load_stars(keyword)
 
       content_type :json
       JSON.generate(stars: stars)
