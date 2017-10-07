@@ -96,8 +96,8 @@ module Isuda
       end
 
       def htmlify(content)
-        keywords = db.xquery(%| select keyword from entry order by keyword_length desc |)
-        pattern = keywords.map {|k| Regexp.escape(k[:keyword]) }.join('|')
+        keywords = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
+        pattern = keywords.map {|k| keywords[:regrex_escape] ? keywords[:regrex_escape] : Regexp.escape(k[:keyword]) }.join('|')
         kw2hash = {}
         hashed_content = content.gsub(/(#{pattern})/) {|m|
           matched_keyword = $1
@@ -214,12 +214,12 @@ module Isuda
       description = params[:description]
       halt(400) if is_spam_content(description) || is_spam_content(keyword)
 
-      bound = [@user_id, keyword, description] * 2
+      bound = [@user_id, keyword, description, keyword, Regexp.escape(keyword)] * 2
       db.xquery(%|
-        INSERT INTO entry (author_id, keyword, description, created_at, updated_at)
-        VALUES (?, ?, ?, NOW(), NOW())
+        INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length, regrex_escape)
+        VALUES (?, ?, ?, NOW(), NOW(), character_length(?), ?)
         ON DUPLICATE KEY UPDATE
-        author_id = ?, keyword = ?, description = ?, updated_at = NOW()
+        author_id = ?, keyword = ?, description = ?, updated_at = NOW(), character_length(?), regrex_escape = ?
       |, *bound)
 
       redirect_found '/'
