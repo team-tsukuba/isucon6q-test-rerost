@@ -7,3 +7,7 @@ service-reload:
 
 nginx-reload:
 	sudo nginx -s reload
+
+deploy:
+	git pull
+	make system-reload
