@@ -217,7 +217,7 @@ module Isuda
       bound = [@user_id, keyword, description, keyword] * 2
       db.xquery(%|
         INSERT INTO entry (author_id, keyword, description, created_at, updated_at, keyword_length)
-        VALUES (?, ?, ?, NOW(), NOW(), character_length(?), ?)
+        VALUES (?, ?, ?, NOW(), NOW(), character_length(?))
         ON DUPLICATE KEY UPDATE
         author_id = ?, keyword = ?, description = ?, updated_at = NOW(), character_length(?)
       |, *bound)
