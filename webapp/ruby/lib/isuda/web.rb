@@ -262,8 +262,10 @@ module Isuda
       JSON.generate(stars: stars)
     end
 
-    post '/stars' do
+    post '/stars', set_name: true do
       keyword = params[:keyword]
+      user_id = session[:user_id]
+      user_name = db.xquery(%| select name from user where id = ? |, user_id).first[:name]
 
       db.xquery(%|
         INSERT INTO star (keyword, user_name, created_at)
