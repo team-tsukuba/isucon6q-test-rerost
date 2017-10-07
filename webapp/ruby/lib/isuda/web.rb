@@ -119,12 +119,13 @@ module Isuda
       end
 
       def load_stars(keyword)
-        isutar_url = URI(settings.isutar_origin)
-        isutar_url.path = '/stars'
-        isutar_url.query = URI.encode_www_form(keyword: keyword)
-        body = Net::HTTP.get(isutar_url)
-        stars_res = JSON.parse(body)
-        stars_res['stars']
+        # isutar_url = URI(settings.isutar_origin)
+        # isutar_url.path = '/stars'
+        # isutar_url.query = URI.encode_www_form(keyword: keyword)
+        # body = Net::HTTP.get(isutar_url)
+        # stars_res = JSON.parse(body)
+        # stars_res['stars']
+        db.xquery(%| select COUNT(*) from star where keyword = ? |, keyword).first.to_i
       end
 
       def redirect_found(path)
@@ -134,9 +135,9 @@ module Isuda
 
     get '/initialize' do
       db.xquery(%| DELETE FROM entry WHERE id > 7101 |)
-      isutar_initialize_url = URI(settings.isutar_origin)
-      isutar_initialize_url.path = '/initialize'
-      Net::HTTP.get_response(isutar_initialize_url)
+      #isutar_initialize_url = URI(settings.isutar_origin)
+      #isutar_initialize_url.path = '/initialize'
+      #Net::HTTP.get_response(isutar_initialize_url)
 
       content_type :json
       JSON.generate(result: 'ok')
