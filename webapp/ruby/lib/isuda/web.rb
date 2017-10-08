@@ -9,6 +9,7 @@ require 'mysql2-cs-bind'
 require 'rack/utils'
 require 'sinatra/base'
 require 'tilt/erubis'
+require 'redis'
 
 #require 'newrelic_rpm'
 require 'rack-mini-profiler'
@@ -69,6 +70,13 @@ module Isuda
             )
             mysql.query_options.update(symbolize_keys: true)
             mysql
+          end
+      end
+
+      def redis
+        Thread.current[:redis] ||=
+          begin
+            Redis.new()
           end
       end
 
