@@ -202,11 +202,16 @@ module Isuda
 
     post '/login' do
       name = params[:name]
-      user = db.xquery(%| select id, salt, password from user where name = ?|, name).first
-      halt(403) unless user
-      halt(403) unless user[:password] == encode_with_salt(password: params[:password], salt: user[:salt])
-
-      session[:user_id] = user[:id]
+      password = params[:password]
+      if redis.get("user:#{name}:password:#{password}") && !redis.get("user:#{name}:password:#{password}").empty?
+        session[:user_id] = redis.get("user:#{name}:password:#{password}")
+      else
+        user = db.xquery(%| select id, salt, password from user where name = ?|, name).first
+        halt(403) unless user
+        halt(403) unless user[:password] == encode_with_salt(password: params[:password], salt: user[:salt])
+        redis.set("user:#{name}:password:#{password}", user[:id])
+        session[:user_id] = user[:id]
+      end
 
       redirect_found '/'
     end
