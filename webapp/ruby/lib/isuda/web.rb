@@ -127,7 +127,8 @@ module Isuda
       end
 
       def load_stars(keyword)
-        db.xquery(%| select user_name from star where keyword = ? |, keyword)
+        #db.xquery(%| select user_name from star where keyword = ? |, keyword)
+        redis.lrange("keyword:#{keyword}", 0, -1)
       end
 
       def redirect_found(path)
@@ -276,14 +277,7 @@ module Isuda
     post '/stars', set_name: true do
       keyword = params[:keyword]
       user_name = params[:user]
-      if db.xquery(%| select count(*) as cnt from entry where keyword = ? |, keyword).first[:cnt] == 0
-        halt(404)
-      end
-
-      db.xquery(%|
-        INSERT INTO star (keyword, user_name, created_at)
-        VALUES (?, ?, NOW())
-      |, keyword, user_name)
+      redis.rpush("keyword:#{keyword}", user_name)
 
       content_type :json
       JSON.generate(result: 'ok')
