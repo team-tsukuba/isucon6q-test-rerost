@@ -278,7 +278,7 @@ module Isuda
     post '/stars', set_name: true do
       keyword = params[:keyword]
       user_name = params[:user]
-      halt(404) unless redis.get("entry:#{keyword}")
+      halt(404) if db.xquery("%| SELECT COUNT(1) as cnt WHERE keyword = ?|", keyword).first[:cnt] == 0
       redis.rpush("star:#{keyword}", user_name)
 
       content_type :json
