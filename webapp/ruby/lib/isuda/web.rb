@@ -153,12 +153,13 @@ module Isuda
 
       entries = db.xquery(%|
         SELECT keyword, description FROM entry
-        WHERE id IN (SELECT id (
+        WHERE id IN (SELECT id FROM (
             SELECT id
+            FROM entry
             ORDER BY updated_at DESC
             LIMIT #{per_page}
             OFFSET #{per_page * (page - 1)}
-          )
+          ) AS S
         )
       |)
       entries.each do |entry|
