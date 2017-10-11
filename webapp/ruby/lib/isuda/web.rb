@@ -35,11 +35,13 @@ module Isuda
       register Sinatra::Reloader
       use Rack::MiniProfiler
       use Rack::Lineprof
+      use Rack::Logger
     end
 
     set(:set_name) do |value|
       condition {
         user_id = session[:user_id]
+        logger.info session
         if user_id
           user = db.xquery(%| select name from user where id = ? |, user_id).first
           @user_id = user_id
