@@ -10,6 +10,7 @@ require 'rack/utils'
 require 'sinatra/base'
 require 'tilt/erubis'
 require 'redis'
+require 'json'
 
 #require 'newrelic_rpm'
 require 'rack-mini-profiler'
@@ -106,7 +107,7 @@ module Isuda
       end
 
       def htmlify(content)
-        keywords = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
+        keywords = redis.get("content") && !redis.get("content").empty? ? JSON.parse(redis.get("content")) : db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
         pattern = keywords.map {|k| k[:regrex_escape] ? k[:regrex_escape] : Regexp.escape(k[:keyword]) }.join('|')
         kw2hash = {}
         hashed_content = content.gsub(/(#{pattern})/) {|m|
@@ -152,9 +153,13 @@ module Isuda
 
       entries = db.xquery(%|
         SELECT keyword, description FROM entry
-        ORDER BY updated_at DESC
-        LIMIT #{per_page}
-        OFFSET #{per_page * (page - 1)}
+        WHERE id IN (SELECT id (
+            SELECT id
+            ORDER BY updated_at DESC
+            LIMIT #{per_page}
+            OFFSET #{per_page * (page - 1)}
+          )
+        )
       |)
       entries.each do |entry|
         entry[:html] = htmlify(entry[:description])
@@ -237,6 +242,7 @@ module Isuda
         ON DUPLICATE KEY UPDATE
         author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = character_length(?), regrex_escape = ?
       |, *bound)
+      redis.set("content", JSON.generate(db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)))
 
       redirect_found '/'
     end
