@@ -3,7 +3,10 @@ system-reload:
 	make service-reload
 
 service-reload:
+	cd webapp/ruby
+	(cd /home/isucon/webapp/ruby; ~/.local/ruby/bin/bundle install)
 	sudo systemctl restart isuda.ruby.service
+	cd
 
 nginx-reload:
 	sudo nginx -s reload
