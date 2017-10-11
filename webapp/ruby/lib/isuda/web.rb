@@ -243,7 +243,8 @@ module Isuda
         ON DUPLICATE KEY UPDATE
         author_id = ?, keyword = ?, description = ?, updated_at = NOW(), keyword_length = character_length(?), regrex_escape = ?
       |, *bound)
-      redis.set("content", JSON.generate(db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)))
+      json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
+      redis.set("content", json)
 
       redirect_found '/'
     end
