@@ -107,7 +107,7 @@ module Isuda
       end
 
       def htmlify(content)
-        keywords = redis.get("content") && !redis.get("content").empty? ? JSON.parse(redis.get("content")) : db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
+        keywords = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |) # redis.get("content") && !redis.get("content").empty? ? JSON.parse(redis.get("content")) : db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
         pattern = keywords.map {|k| k["regrex_escape"] || k[:regrex_escape] ? k["regrex_escape"] || k[:regrex_escape] : Regexp.escape(k["keyword"] || k[:keyword]) }.join('|')
         kw2hash = {}
         hashed_content = content.gsub(/(#{pattern})/) {|m|
