@@ -144,6 +144,20 @@ module Isuda
       db.xquery('TRUNCATE star')
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
       redis.set("content", json)
+      redis.zremrangebyscore("entries:orderby_updated_at", "-inf", "+inf")
+      entries = db.xquery(%|
+        SELECT keyword, description, updated_at FROM entry
+        WHERE id IN (SELECT id FROM (
+            SELECT id
+            FROM entry
+            ORDER BY updated_at DESC
+          ) AS S
+        )
+      |)
+      entries.each { |entry|
+        redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at].to_i, {keyword: entry[:keyword], description: entry[:description]}.to_json)
+      }
+
 
       content_type :json
       JSON.generate(result: 'ok')
