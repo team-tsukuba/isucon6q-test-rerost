@@ -165,7 +165,7 @@ module Isuda
     end
 
     get '/test_remove' do
-      redis.zremrangebyrank("entries:orderby_updated_at", "-inf", "+inf")
+      redis.zremrangebyscore("entries:orderby_updated_at", "-inf", "+inf")
 
       content_type :json
       JSON.generate(result: 'ok')
