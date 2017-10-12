@@ -8,6 +8,7 @@ gem 'mysql2-cs-bind'
 gem 'sinatra'
 gem 'unicorn'
 gem 'redis'
+gem 'puma'
 
 group :development do
   gem 'foreman'
@@ -15,6 +16,7 @@ group :development do
 
   gem 'rack-lineprof'
   gem 'rack-mini-profiler'
+  gem 'stackprof'
 
   # For memory profiling (requires Ruby MRI 2.1+)
   gem 'memory_profiler'
