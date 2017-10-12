@@ -15,6 +15,7 @@ require 'json'
 #require 'newrelic_rpm'
 require 'rack-mini-profiler'
 require 'rack-lineprof'
+require 'stackprof'
 
 module Isuda
   class Web < ::Sinatra::Base
@@ -37,6 +38,7 @@ module Isuda
       use Rack::MiniProfiler
       use Rack::Lineprof
       use Rack::Logger
+      use StackProf::Middleware, enable: true, mode: :wall, save_every: 1, path: '/home/isucon/webapp/ruby/tmp/stackprof'
     end
 
     set(:set_name) do |value|
