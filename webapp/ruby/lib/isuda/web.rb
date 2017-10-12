@@ -286,7 +286,9 @@ module Isuda
       redis.set("content", json)
 
       redis.zadd("entries:orderby_updated_at", -1 * Time.now().to_i, {keyword: keyword, description: description}.to_json)
-      redis.del(redis.keys("htmlify:*"))
+      redis.keys("htmlify:*").map { |key|
+        redis.del(key)
+      }
 
       redirect_found '/'
     end
