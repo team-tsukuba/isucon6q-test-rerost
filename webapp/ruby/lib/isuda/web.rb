@@ -178,8 +178,8 @@ module Isuda
       entries = redis.zrangebyscore("entries:orderby_updated_at", "-inf", "+inf", limit: [per_page * (page - 1), per_page * page])
       entries.each do |entry|
         entry = JSON.parse(entry)
-        entry["html"] = htmlify(entry[:description])
-        entry["stars"] = load_stars(entry[:keyword])
+        entry["html"] = htmlify(entry["description"])
+        entry["stars"] = load_stars(entry["keyword"])
       end
 
       total_entries = db.xquery(%| SELECT count(*) AS total_entries FROM entry |).first[:total_entries].to_i
