@@ -168,7 +168,7 @@ module Isuda
       per_page = 10
       page = (params[:page] || 1).to_i
 
-      entries = redis.zrangebyscore("entries:orderby_updated_at", 0, -1, limit: [per_page * (page - 1), per_page * page])
+      entries = redis.zrangebyscore("entries:orderby_updated_at", "-inf", "+inf", limit: [per_page * (page - 1), per_page * page])
       entries.each do |entry|
         entry = JSON.parse(entry)
         entry["html"] = htmlify(entry[:description])
