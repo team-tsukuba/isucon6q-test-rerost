@@ -164,6 +164,13 @@ module Isuda
       JSON.generate(result: 'ok')
     end
 
+    get '/test_remove' do
+      redis.zremrangebyrank("entries:orderby_updated_at", "-inf", "+inf")
+
+      content_type :json
+      JSON.generate(result: 'ok')
+    end
+
     get '/', set_name: true do
       per_page = 10
       page = (params[:page] || 1).to_i
