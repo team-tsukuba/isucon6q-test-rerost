@@ -1,9 +1,9 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-CREATE INDEX index_created_at ON entry;
+ALTER TABLE entry ADD INDEX index_created_at(updated_at);
 
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP INDEX index_created_at;
+ALTER TABLE entry DROP INDEX index_created_at;
