@@ -158,7 +158,7 @@ module Isuda
         )
       |)
       entries.each { |entry|
-        redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at], {keyword: entry[:keyword], description: entry[:description]}.to_json)
+        redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at].to_i, {keyword: entry[:keyword], description: entry[:description]}.to_json)
       }
       content_type :json
       JSON.generate(result: 'ok')
