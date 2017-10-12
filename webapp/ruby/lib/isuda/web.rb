@@ -109,6 +109,7 @@ module Isuda
       end
 
       def htmlify(content)
+        return redis.get("htmlify:#{content}") if redis.get("htmlify:#{content}") && !redis.get("htmlify:#{content}").empty?
         keywords = redis.get("content") && !redis.get("content").empty? ? JSON.parse(redis.get("content")) : db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
         pattern = keywords.map {|k| k["regrex_escape"] || k[:regrex_escape] ? k["regrex_escape"] || k[:regrex_escape] : Regexp.escape(k["keyword"] || k[:keyword]) }.join('|')
         kw2hash = {}
@@ -124,7 +125,9 @@ module Isuda
           anchor = '<a href="%s">%s</a>' % [keyword_url, Rack::Utils.escape_html(keyword)]
           escaped_content.gsub!(hash, anchor)
         end
-        escaped_content.gsub(/\n/, "<br />\n")
+        ans = escaped_content.gsub(/\n/, "<br />\n")
+        redis.set("htmlify:#{content}", ans)
+        ans
       end
 
       def uri_escape(str)
