@@ -147,12 +147,9 @@ module Isuda
       JSON.generate(result: 'ok')
     end
 
-    get '/', set_name: true do
-      per_page = 10
-      page = (params[:page] || 1).to_i
-
+    get '/test' do
       entries = db.xquery(%|
-        SELECT keyword, description FROM entry
+        SELECT keyword, description, updated_at FROM entry
         WHERE id IN (SELECT id FROM (
             SELECT id
             FROM entry
@@ -162,9 +159,19 @@ module Isuda
           ) AS S
         )
       |)
+      entries.each { |entry|
+        redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at], {keyword: entry[:keyword], description: entry[:description]}.to_json)
+      }
+    end
+
+    get '/', set_name: true do
+      per_page = 10
+      page = (params[:page] || 1).to_i
+
+      entries = JSON.parse(redis.zrangebyscore("entries:orderby_updated_at", 0, "+inf", limit: [per_page * (page - 1), per_page * page]))
       entries.each do |entry|
-        entry[:html] = htmlify(entry[:description])
-        entry[:stars] = load_stars(entry[:keyword])
+        entry["html"] = htmlify(entry[:description])
+        entry["stars"] = load_stars(entry[:keyword])
       end
 
       total_entries = db.xquery(%| SELECT count(*) AS total_entries FROM entry |).first[:total_entries].to_i
@@ -245,6 +252,8 @@ module Isuda
       |, *bound)
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
       redis.set("content", json)
+
+      redis.zadd("entries:orderby_updated_at", -1 * Time.now().to_i, {keyword: keyword, description: description}.to_json)
 
       redirect_found '/'
     end
