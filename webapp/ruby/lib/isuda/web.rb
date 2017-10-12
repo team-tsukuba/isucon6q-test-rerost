@@ -107,7 +107,7 @@ module Isuda
       end
 
       def htmlify(content)
-        keywords = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |) # redis.get("content") && !redis.get("content").empty? ? JSON.parse(redis.get("content")) : db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
+        keywords = redis.get("content") && !redis.get("content").empty? ? JSON.parse(redis.get("content")) : db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |)
         pattern = keywords.map {|k| k["regrex_escape"] || k[:regrex_escape] ? k["regrex_escape"] || k[:regrex_escape] : Regexp.escape(k["keyword"] || k[:keyword]) }.join('|')
         kw2hash = {}
         hashed_content = content.gsub(/(#{pattern})/) {|m|
@@ -157,7 +157,8 @@ module Isuda
       entries.each { |entry|
         redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at].to_i, {keyword: entry[:keyword], description: entry[:description]}.to_json)
       }
-
+      json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
+      redis.set("content", json)
 
       content_type :json
       JSON.generate(result: 'ok')
@@ -306,6 +307,8 @@ module Isuda
       end
 
       db.xquery(%| DELETE FROM entry WHERE keyword = ? |, keyword)
+      json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
+      redis.set("content", json)
 
       redirect_found '/'
     end
