@@ -142,6 +142,8 @@ module Isuda
     get '/initialize' do
       db.xquery(%| DELETE FROM entry WHERE id > 7101 |)
       db.xquery('TRUNCATE star')
+      json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
+      redis.set("content", json)
 
       content_type :json
       JSON.generate(result: 'ok')
