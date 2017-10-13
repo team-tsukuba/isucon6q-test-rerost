@@ -206,13 +206,10 @@ module Isuda
         entries = entries_.map do |entry|
           entry = JSON.parse(entry)
           entry["html"] = htmlify(entry["description"])
+          entry["stars"] = load_stars(entry["keyword"])
           entry
         end
         redis.set("top_entries:#{entries_.to_json}", entries.to_json)
-      end
-
-      entries = entries.map do |entry|
-        entry["stars"] = load_stars(entry["keyword"])
       end
 
       total_entries = db.xquery(%| SELECT count(*) AS total_entries FROM entry |).first[:total_entries].to_i
