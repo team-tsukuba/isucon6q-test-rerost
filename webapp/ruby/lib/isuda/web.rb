@@ -144,9 +144,18 @@ module Isuda
     end
 
     get '/initialize' do
-      redis.flushall
+      #redis.flushall
+      delete_keywords = db.xquery(%| SELECT keyword FROM entry WHERE id > 7101 |).to_a.map {|k| "description LIKE %{k[:keyword]}%" }.join("or").chop.chop
+      db.xquery(%| SELECT keyword FROM entry WHERE ?|, delete_keywords}).map { |k|
+        redis.del("htmlify:#{k}")
+      }
       db.xquery(%| DELETE FROM entry WHERE id > 7101 |)
+
+      redis.keys("star:*").map {|key|
+        redis.del(key)
+      }
       db.xquery('TRUNCATE star')
+
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
       redis.set("content", json)
       entries = db.xquery(%|
@@ -161,8 +170,6 @@ module Isuda
       entries.each { |entry|
         redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at].to_i, {keyword: entry[:keyword], description: entry[:description]}.to_json)
       }
-      json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
-      redis.set("content", json)
       redis.set("total_entries", entries.to_a.length)
 
       users = db.xquery(%| select id, name, salt, password from user |)
@@ -170,8 +177,6 @@ module Isuda
         redis.set("user_name:#{user[:id]}", user[:name])
         redis.set("user:#{user[:name]}", {id: user[:id], salt: user[:salt], password: user[:password]}.to_json)
       }
-
-      db.xquery(%| select id, salt, password from user|)
 
       content_type :json
       JSON.generate(result: 'ok')
