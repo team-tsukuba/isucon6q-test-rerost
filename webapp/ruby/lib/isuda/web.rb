@@ -46,9 +46,8 @@ module Isuda
         user_id = session[:user_id]
         logger.info session
         if user_id
-          user = redis.get("user:#{user_id}")
+          @user_name = redis.get("user_name:#{user_id}")
           @user_id = user_id
-          @user_name = user[:name]
           halt(403) unless @user_name
         end
       }
@@ -168,7 +167,7 @@ module Isuda
 
       users = db.xquery(%| select id, name from user |)
       users.map { |user|
-        redis.set("user:#{user[:id]}", user[:name])
+        redis.set("user_name:#{user[:id]}", user[:name])
       }
 
       content_type :json
@@ -218,7 +217,7 @@ module Isuda
 
       user_id = register(name, pw)
       session[:user_id] = user_id
-      redis.set("user:#{user_id}", name)
+      redis.set("user_name:#{user_id}", name)
 
       redirect_found '/'
     end
