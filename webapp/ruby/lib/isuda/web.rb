@@ -146,7 +146,7 @@ module Isuda
     get '/initialize' do
       #redis.flushall
       delete_keywords = db.xquery(%| SELECT keyword FROM entry WHERE id > 7101 |).to_a.map {|k| "description LIKE %{k[:keyword]}%" }.join("or").chop.chop
-      db.xquery(%| SELECT keyword FROM entry WHERE ?|, delete_keywords}).map { |k|
+      db.xquery(%| SELECT keyword FROM entry WHERE ?|, delete_keywords).map { |k|
         redis.del("htmlify:#{k}")
       }
       db.xquery(%| DELETE FROM entry WHERE id > 7101 |)
