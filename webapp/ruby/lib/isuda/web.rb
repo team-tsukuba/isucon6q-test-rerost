@@ -204,6 +204,7 @@ module Isuda
         entries = JSON.parse(redis.get("top_entries:#{entries_.to_json}"))
       else
         entries = entries_.map do |entry|
+          entry = JSON.parse(entry)
           entry["html"] = htmlify(entry["description"])
           entry
         end
