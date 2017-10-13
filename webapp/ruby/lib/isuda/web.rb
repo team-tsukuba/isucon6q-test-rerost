@@ -239,6 +239,7 @@ module Isuda
       if redis.get("user:#{name}:password:#{password}") && !redis.get("user:#{name}:password:#{password}").empty?
         session[:user_id] = redis.get("user:#{name}:password:#{password}")
       else
+        halt(403) unless redis.get("user_passwd:#{name}")
         user = JSON.parse(redis.get("user_passwd:#{name}")) #db.xquery(%| select id, salt, password from user where name = ?|, name).first
         halt(403) unless user
         halt(403) unless user["password"] == encode_with_salt(password: params[:password], salt: user["salt"])
