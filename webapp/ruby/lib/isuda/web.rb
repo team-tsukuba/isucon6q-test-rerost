@@ -199,7 +199,6 @@ module Isuda
       page = (params[:page] || 1).to_i
 
       entries_ = redis.zrangebyscore("entries:orderby_updated_at", "-inf", "+inf", limit: [per_page * (page - 1), per_page * page]).to_a
-      entries = []
       if redis.get("top_entries:#{entries_.to_json}") && !redis.get("top_entries:#{entries_.to_json}").blank?
         entries = redis.get("top_entries:#{entries_}")
       else
