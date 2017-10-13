@@ -294,9 +294,9 @@ module Isuda
       redis.set("content", json)
 
       redis.zadd("entries:orderby_updated_at", -1 * Time.now().to_i, {keyword: keyword, description: description}.to_json)
-      redis.keys("htmlify:*").map { |key|
-        redis.del(key)
-      }
+      keywords = db.prepare("select keyword from entry where description like ?").execute("%#{keyword}%").map do |entry|
+        redis.del("htmlify:#{entry[:keyword]}")
+      end
       redis.keys("top_entries:*").map { |key|
         redis.del(key)
       }
