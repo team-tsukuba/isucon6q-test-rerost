@@ -198,12 +198,17 @@ module Isuda
       per_page = 10
       page = (params[:page] || 1).to_i
 
-      entries = redis.zrangebyscore("entries:orderby_updated_at", "-inf", "+inf", limit: [per_page * (page - 1), per_page * page])
-      entries = entries.map do |entry|
-        entry = JSON.parse(entry)
-        entry["html"] = htmlify(entry["description"])
-        entry["stars"] = load_stars(entry["keyword"])
-        entry
+      entries_ = redis.zrangebyscore("entries:orderby_updated_at", "-inf", "+inf", limit: [per_page * (page - 1), per_page * page]).to_a
+      if redis.get("top_entries:#{entries_.to_json}") && !redis.get("top_entries:#{entries_.to_json}").blank?
+        entries = redis.get("top_entries:#{entries_}")
+      else
+        entries = entries_.map do |entry|
+          entry = JSON.parse(entry)
+          entry["html"] = htmlify(entry["description"])
+          entry["stars"] = load_stars(entry["keyword"])
+          entry
+        end
+        redis.set("top_entries:#{entries_.to_json}", entries.to_json)
       end
 
       total_entries = db.xquery(%| SELECT count(*) AS total_entries FROM entry |).first[:total_entries].to_i
@@ -287,6 +292,9 @@ module Isuda
 
       redis.zadd("entries:orderby_updated_at", -1 * Time.now().to_i, {keyword: keyword, description: description}.to_json)
       redis.keys("htmlify:*").map { |key|
+        redis.del(key)
+      }
+      redis.keys("top_entries:*").map { |key|
         redis.del(key)
       }
 
