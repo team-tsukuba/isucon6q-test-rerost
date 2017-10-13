@@ -150,7 +150,6 @@ module Isuda
       db.xquery('TRUNCATE star')
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
       redis.set("content", json)
-      redis.zremrangebyscore("entries:orderby_updated_at", "-inf", "+inf")
       entries = db.xquery(%|
         SELECT keyword, description, updated_at FROM entry
         WHERE id IN (SELECT id FROM (
@@ -165,30 +164,7 @@ module Isuda
       }
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
       redis.set("content", json)
-
-      content_type :json
-      JSON.generate(result: 'ok')
-    end
-
-    get '/test' do
-      entries = db.xquery(%|
-        SELECT keyword, description, updated_at FROM entry
-        WHERE id IN (SELECT id FROM (
-            SELECT id
-            FROM entry
-            ORDER BY updated_at DESC
-          ) AS S
-        )
-      |)
-      entries.each { |entry|
-        redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at].to_i, {keyword: entry[:keyword], description: entry[:description]}.to_json)
-      }
-      content_type :json
-      JSON.generate(result: 'ok')
-    end
-
-    get '/test_remove' do
-      redis.zremrangebyscore("entries:orderby_updated_at", "-inf", "+inf")
+      redis.set("total_entries", entries.length)
 
       content_type :json
       JSON.generate(result: 'ok')
@@ -206,7 +182,7 @@ module Isuda
         entry
       end
 
-      total_entries = db.xquery(%| SELECT count(*) AS total_entries FROM entry |).first[:total_entries].to_i
+      total_entries = redis.get("total_entries").to_i
 
       last_page = (total_entries.to_f / per_page.to_f).ceil
       from = [1, page - 5].max
@@ -291,6 +267,8 @@ module Isuda
         redis.del("htmlify:#{entry[:keyword]}")
       end
 
+      redis.incr("total_entries")
+
       redirect_found '/'
     end
 
@@ -319,6 +297,8 @@ module Isuda
       db.xquery(%| DELETE FROM entry WHERE keyword = ? |, keyword)
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
       redis.set("content", json)
+
+      redis.decr("total_entries")
 
       redirect_found '/'
     end
