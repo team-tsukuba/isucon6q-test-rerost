@@ -168,7 +168,7 @@ module Isuda
       users = db.xquery(%| select id, name, salt, password from user |)
       users.map { |user|
         redis.set("user_name:#{user[:id]}", user[:name])
-        redis.set("user_passwd:#{name}", {id: user[:id], salt: user[:salt], password: user[:password]}.to_json)
+        redis.set("user_passwd:#{user[:name]}", {id: user[:id], salt: user[:salt], password: user[:password]}.to_json)
       }
 
       db.xquery(%| select id, salt, password from user|)
