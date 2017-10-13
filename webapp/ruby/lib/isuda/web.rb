@@ -163,7 +163,7 @@ module Isuda
       }
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
       redis.set("content", json)
-      redis.set("total_entries", entries.length)
+      redis.set("total_entries", entries.to_a.length)
 
       users = db.xquery(%| select id, name from user |)
       users.map { |user|
