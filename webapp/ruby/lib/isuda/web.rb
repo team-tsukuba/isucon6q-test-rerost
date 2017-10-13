@@ -167,6 +167,7 @@ module Isuda
           ) AS S
         )
       |)
+      redis.del("entries:orderby_updated_at")
       entries.each { |entry|
         redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at].to_i, {keyword: entry[:keyword], description: entry[:description]}.to_json)
       }
