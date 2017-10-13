@@ -92,7 +92,7 @@ module Isuda
           INSERT INTO user (name, salt, password, created_at)
           VALUES (?, ?, ?, NOW())
         |, name, salt, salted_password)
-        db.last_id
+        [db.last_id, salt]
       end
 
       def encode_with_salt(password: , salt: )
@@ -165,10 +165,13 @@ module Isuda
       redis.set("content", json)
       redis.set("total_entries", entries.to_a.length)
 
-      users = db.xquery(%| select id, name from user |)
+      users = db.xquery(%| select id, name, salt, password from user |)
       users.map { |user|
         redis.set("user_name:#{user[:id]}", user[:name])
+        redis.set("user_passwd:#{name}", {id: user[:id], salt: user[:salt], password: user[:password]}.to_json)
       }
+
+      db.xquery(%| select id, salt, password from user|)
 
       content_type :json
       JSON.generate(result: 'ok')
@@ -215,9 +218,10 @@ module Isuda
       pw   = params[:password] || ''
       halt(400) if (name == '') || (pw == '')
 
-      user_id = register(name, pw)
+      user_id, salt = register(name, pw)
       session[:user_id] = user_id
       redis.set("user_name:#{user_id}", name)
+      redis.set("user_passwd:#{name}", {id: user_id, salt: salt, password: pw}.to_json)
 
       redirect_found '/'
     end
@@ -235,11 +239,11 @@ module Isuda
       if redis.get("user:#{name}:password:#{password}") && !redis.get("user:#{name}:password:#{password}").empty?
         session[:user_id] = redis.get("user:#{name}:password:#{password}")
       else
-        user = db.xquery(%| select id, salt, password from user where name = ?|, name).first
+        user = JSON.parse(redis.get("user_passwd:#{name}")) #db.xquery(%| select id, salt, password from user where name = ?|, name).first
         halt(403) unless user
-        halt(403) unless user[:password] == encode_with_salt(password: params[:password], salt: user[:salt])
+        halt(403) unless user["password"] == encode_with_salt(password: params[:password], salt: user["salt"])
         redis.set("user:#{name}:password:#{password}", user[:id])
-        session[:user_id] = user[:id]
+        session[:user_id] = user["id"]
       end
 
       redirect_found '/'
