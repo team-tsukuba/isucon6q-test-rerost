@@ -168,7 +168,7 @@ module Isuda
       users = db.xquery(%| select id, name, salt, password from user |)
       users.map { |user|
         redis.set("user_name:#{user[:id]}", user[:name])
-        redis.set("user_passwd:#{user[:name]}", {id: user[:id], salt: user[:salt], password: user[:password]}.to_json)
+        redis.set("user:#{user[:name]}", {id: user[:id], salt: user[:salt], password: user[:password]}.to_json)
       }
 
       db.xquery(%| select id, salt, password from user|)
@@ -220,8 +220,8 @@ module Isuda
 
       user_id, salt = register(name, pw)
       session[:user_id] = user_id
-      redis.set("user_name:#{user_id}", name)
-      redis.set("user_passwd:#{name}", {id: user_id, salt: salt, password: pw}.to_json)
+      redis.set("user_name:#{user[:id]}", name)
+      redis.set("user:#{name}", {id: user_id, salt: salt, password: pw}.to_json)
 
       redirect_found '/'
     end
@@ -236,16 +236,11 @@ module Isuda
     post '/login' do
       name = params[:name]
       password = params[:password]
-      if redis.get("user:#{name}:password:#{password}") && !redis.get("user:#{name}:password:#{password}").empty?
-        session[:user_id] = redis.get("user:#{name}:password:#{password}")
-      else
-        halt(403) unless redis.get("user_passwd:#{name}")
-        user = JSON.parse(redis.get("user_passwd:#{name}")) #db.xquery(%| select id, salt, password from user where name = ?|, name).first
-        halt(403) unless user
-        halt(403) unless user["password"] == encode_with_salt(password: params[:password], salt: user["salt"])
-        redis.set("user:#{name}:password:#{password}", user[:id])
-        session[:user_id] = user["id"]
-      end
+      halt(403) unless redis.get("user:#{name}")
+      user = JSON.parse(redis.get("user:#{name}"))
+      halt(403) unless user
+      halt(403) unless user["password"] == encode_with_salt(password: params[:password], salt: user["salt"])
+      session[:user_id] = user["id"]
 
       redirect_found '/'
     end
