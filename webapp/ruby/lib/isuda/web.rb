@@ -144,16 +144,16 @@ module Isuda
     end
 
     get '/initialize' do
-      #redis.flushall
-      delete_keywords = db.xquery(%| SELECT keyword FROM entry WHERE id > 7101 |).to_a.map {|k| "description LIKE %{k[:keyword]}%" }.join("or").chop.chop
-      db.xquery(%| SELECT keyword FROM entry WHERE ?|, delete_keywords).map { |k|
-        redis.del("htmlify:#{k}")
-      }
+      redis.flushall
+      #delete_keywords = db.xquery(%| SELECT keyword FROM entry WHERE id > 7101 |).to_a.map {|k| "description LIKE %{k[:keyword]}%" }.join("or").chop.chop
+      #db.xquery(%| SELECT keyword FROM entry WHERE ?|, delete_keywords).map { |k|
+      #  redis.del("htmlify:#{k}")
+      #}
       db.xquery(%| DELETE FROM entry WHERE id > 7101 |)
 
-      redis.keys("star:*").map {|key|
-        redis.del(key)
-      }
+      #redis.keys("star:*").map {|key|
+      #  redis.del(key)
+      #}
       db.xquery('TRUNCATE star')
 
       json = db.xquery(%| select keyword, regrex_escape from entry order by keyword_length desc |).to_a.to_json
@@ -167,7 +167,7 @@ module Isuda
           ) AS S
         )
       |)
-      redis.del("entries:orderby_updated_at")
+      #redis.del("entries:orderby_updated_at")
       entries.each { |entry|
         redis.zadd("entries:orderby_updated_at", -1 * entry[:updated_at].to_i, {keyword: entry[:keyword], description: entry[:description]}.to_json)
       }
